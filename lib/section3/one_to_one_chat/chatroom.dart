@@ -1,21 +1,34 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 
-const currentUserID = 'userA'; 
-const chatPartnerID = 'userB';
-
 String getChatId(String user1, String user2) {
   return user1.hashCode <= user2.hashCode ? '${user1}_$user2' : '${user2}_$user1';
 }
 
 class ChatScreen extends StatefulWidget {
+  final String currentUserID;
+  final String chatPartnerID;
+
+  const ChatScreen({
+    super.key,
+    required this.currentUserID,
+    required this.chatPartnerID,
+  });
+
   @override
   State<ChatScreen> createState() => _ChatScreenState();
 }
 
 class _ChatScreenState extends State<ChatScreen> {
   final TextEditingController _controller = TextEditingController();
-  final String chatId = getChatId(currentUserID, chatPartnerID);
+
+  late final String chatId;
+
+  @override
+  void initState() {
+    super.initState();
+    chatId = getChatId(widget.currentUserID, widget.chatPartnerID);
+  }
 
   void sendMessage(String text) {
     final timestamp = FieldValue.serverTimestamp();
@@ -25,7 +38,7 @@ class _ChatScreenState extends State<ChatScreen> {
         .doc(chatId)
         .collection('messages')
         .add({
-      'senderId': currentUserID,
+      'senderId': widget.currentUserID,
       'text': text,
       'timestamp': timestamp,
     });
@@ -34,7 +47,7 @@ class _ChatScreenState extends State<ChatScreen> {
         .collection('chats')
         .doc(chatId)
         .collection('lastSeen')
-        .doc(currentUserID)
+        .doc(widget.currentUserID)
         .set({'timestamp': timestamp});
   }
 
@@ -42,9 +55,8 @@ class _ChatScreenState extends State<ChatScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text("Chat with $chatPartnerID"),
+        title: Text('Chat with ${widget.chatPartnerID}'),
         backgroundColor: Colors.teal,
-        elevation: 0,
       ),
       body: Column(
         children: [
@@ -54,20 +66,20 @@ class _ChatScreenState extends State<ChatScreen> {
                   .collection('chats')
                   .doc(chatId)
                   .collection('messages')
-                  .orderBy('timestamp')
+                  .orderBy('timestamp', descending: true)
                   .snapshots(),
               builder: (context, snapshot) {
                 if (snapshot.hasError) {
-                  return Center(child: Text('Error: ${snapshot.error}'));
+                  return const Center(child: Text('Something went wrong'));
                 }
                 if (!snapshot.hasData) {
-                  return Center(child: CircularProgressIndicator());
+                  return const Center(child: CircularProgressIndicator());
                 }
 
                 final messages = snapshot.data!.docs;
 
                 if (messages.isEmpty) {
-                  return Center(child: Text("No messages yet."));
+                  return const Center(child: Text("No messages yet."));
                 }
 
                 return ListView.builder(
@@ -75,22 +87,17 @@ class _ChatScreenState extends State<ChatScreen> {
                   itemCount: messages.length,
                   itemBuilder: (context, index) {
                     final msg = messages[index];
-                    final isMe = msg['senderId'] == currentUserID;
+                    final isMe = msg['senderId'] == widget.currentUserID;
                     return Align(
-                      alignment: isMe ? Alignment.centerRight : Alignment.centerLeft,
+                      alignment:
+                          isMe ? Alignment.centerRight : Alignment.centerLeft,
                       child: Container(
-                        margin: EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-                        padding: EdgeInsets.all(12),
+                        margin:
+                            const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                        padding: const EdgeInsets.all(12),
                         decoration: BoxDecoration(
-                          color: isMe ? Colors.blue[200] : Colors.grey[300],
-                          borderRadius: BorderRadius.circular(12),
-                          boxShadow: [
-                            BoxShadow(
-                              color: Colors.black26,
-                              blurRadius: 4,
-                              offset: Offset(0, 2),
-                            ),
-                          ],
+                          color: isMe ? Colors.teal : Colors.grey[300],
+                          borderRadius: BorderRadius.circular(14),
                         ),
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
@@ -98,22 +105,23 @@ class _ChatScreenState extends State<ChatScreen> {
                             Text(
                               msg['text'],
                               style: TextStyle(
-                                fontSize: 16,
+                                fontSize: 15,
                                 color: isMe ? Colors.white : Colors.black87,
                               ),
                             ),
                             if (msg['timestamp'] != null)
-                              SizedBox(height: 5),
-                            if (msg['timestamp'] != null)
-                              Text(
-                                (msg['timestamp'] as Timestamp)
-                                    .toDate()
-                                    .toLocal()
-                                    .toString()
-                                    .substring(11, 16),
-                                style: TextStyle(
-                                  fontSize: 10,
-                                  color: Colors.black54,
+                              Padding(
+                                padding: const EdgeInsets.only(top: 4),
+                                child: Text(
+                                  (msg['timestamp'] as Timestamp)
+                                      .toDate()
+                                      .toLocal()
+                                      .toString()
+                                      .substring(11, 16),
+                                  style: const TextStyle(
+                                    fontSize: 10,
+                                    color: Colors.white70,
+                                  ),
                                 ),
                               ),
                           ],
@@ -126,7 +134,7 @@ class _ChatScreenState extends State<ChatScreen> {
             ),
           ),
           Padding(
-            padding: const EdgeInsets.all(8),
+            padding: const EdgeInsets.all(10),
             child: Row(
               children: [
                 Expanded(
@@ -134,33 +142,29 @@ class _ChatScreenState extends State<ChatScreen> {
                     controller: _controller,
                     decoration: InputDecoration(
                       labelText: 'Type a message...',
+                      filled: true,
+                      fillColor: Colors.grey[100],
                       border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(20),
-                        borderSide: BorderSide(
-                          color: Colors.teal,
-                          width: 1,
-                        ),
+                        borderRadius: BorderRadius.circular(25),
                       ),
                       focusedBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(20),
-                        borderSide: BorderSide(
-                          color: Colors.teal,
-                          width: 2,
-                        ),
+                        borderSide: const BorderSide(color: Colors.teal, width: 2),
+                        borderRadius: BorderRadius.circular(25),
                       ),
                     ),
                   ),
                 ),
-                SizedBox(width: 10),
+                const SizedBox(width: 10),
                 IconButton(
-                  icon: Icon(Icons.send),
+                  icon: const Icon(Icons.send),
+                  color: Colors.teal,
                   onPressed: () {
-                    if (_controller.text.trim().isNotEmpty) {
-                      sendMessage(_controller.text.trim());
+                    final text = _controller.text.trim();
+                    if (text.isNotEmpty) {
+                      sendMessage(text);
                       _controller.clear();
                     }
                   },
-                  color: Colors.teal,
                 ),
               ],
             ),
