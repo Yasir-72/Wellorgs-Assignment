@@ -1,0 +1,78 @@
+Section 1: One-Word / Short Answers 
+
+1. What widget helps in preserving the state of children in a ListView?
+Answer: `AutomaticKeepAliveClientMixin`.
+
+
+2. Which keyword is used in Dart to prevent subclassing?
+Answer: `final`.
+
+
+3.What layout widget allows children to overlap each other?
+Answer: `Stack`. 
+
+
+4. What command do you use to analyze Dart code for issues?
+Answer: `dart analyze`.
+
+
+5. Name the function that is the entry point of a Flutter app.
+Answer: `main`.
+
+
+6. What widget is used to fetch asynchronous data and rebuild UI?
+Answer: `FutureBuilder`.
+
+
+7. Which lifecycle method is called exactly once when the widget is inserted in the tree?
+Answer: `initState`.
+
+
+8. Which type of animation uses a physics-based approach?
+Answer: `Physics-based animation (e.g., SpringSimulation, BouncingScrollSimulation, etc.)
+`.
+
+
+9. What is the default state management approach in Flutter?
+Answer: `setState()`.
+
+
+10. What is the return type of build() method?
+Answer: `Widget`.
+
+
+11. What’s the difference between Future and Stream in one line?   
+Answer: `A Future represents a single asynchronous result, while a Stream represents a sequence of asynchronous results over time`.
+
+
+12. When would you use ChangeNotifier instead of Bloc?
+Answer: `When you have a simple state management scenario and don't need the extra features of Bloc`.
+
+
+13. What HTTP response code usually means “authentication failed”? 
+Answer: `401`.
+ 
+   
+14. Why should we avoid putting heavy logic inside build() method? 
+Answer: `because it runs again and again, and too much work inside it can make the app slow.`.
+ 
+ 
+
+15. What’s the role of async/await in Flutter apps?
+Answer: `The role of async/await in Flutter apps is to make asynchronous code easier to write and read, allowing the app to wait for tasks like API calls or file reading without blocking the UI`.
+
+
+
+16. When calling an API, what headers are generally necessary? 
+Answer: `Content-Type, Accept, and Authorization`.
+ 
+
+17. Suppose an API returns { "status": "error", "message": "Token expired" }, what would be your first action in the app?
+Answer: 1.Clear stored tokens/session data.
+        2.Show a message like "Session expired. Please log in again.
+        3.Navigate to Login or Authentication screen.
+
+
+
+18. Which method is used to parse JSON response into Dart model?
+Answer: `jsonDecode()`.

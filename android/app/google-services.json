@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "645493220772",
+    "project_id": "chat-room-22210",
+    "storage_bucket": "chat-room-22210.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:645493220772:android:b62216f651e620df058d31",
+        "android_client_info": {
+          "package_name": "com.example.wellorgs_assignment"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBSRj6l5iNCNl-HtODRGE596H0v0UJJwoA"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

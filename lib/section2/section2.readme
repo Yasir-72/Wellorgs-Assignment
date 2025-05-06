@@ -1,0 +1,229 @@
+Q1. Bug Explanation – Shared Controller Causing Leaked State ?
+
+Problem:
+The same TextEditingController _controller is declared globally and shared across two pages. This can lead to Leaked state.
+
+Corrected Code: 
+
+class PageOne extends StatefulWidget {
+  @override
+  _PageOneState createState() => _PageOneState();
+}
+
+class _PageOneState extends State<PageOne> {
+  final TextEditingController _controller = TextEditingController();
+
+  @override
+  void dispose() {
+    _controller.dispose(); 
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return TextField(controller: _controller);
+  }
+}
+
+class PageTwo extends StatefulWidget {
+  @override
+  _PageTwoState createState() => _PageTwoState();
+}
+
+class _PageTwoState extends State<PageTwo> {
+  final TextEditingController _controller = TextEditingController();
+
+  @override
+  void dispose() {
+    _controller.dispose(); 
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      children: [
+        Text('Second Page'),
+        TextField(controller: _controller),
+      ],
+    );
+  }
+}
+
+
+ Q2. Simplified Fix – Retain State Across Tabs?
+
+Problem:
+
+The state of the TextField is not retained when switching between tabs using IndexedStack.
+
+
+
+Corrected Code:
+
+class _MyTabViewState extends State<MyTabView> {
+  int currentIndex = 0;
+  
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      children: [
+        Row(
+          children: [
+            ElevatedButton(onPressed: () => setState(() => currentIndex = 0), child: Text('A')),
+            ElevatedButton(onPressed: () => setState(() => currentIndex = 1), child: Text('B')),
+          ],
+        ),
+        IndexedStack(
+          index: currentIndex,
+          children: [
+            TextField(key: PageStorageKey('field1')),  
+            TextField(key: PageStorageKey('field2')), 
+          ],
+        )
+      ],
+    );
+  }
+}
+
+Q3. State Mutation in build() Leads to Infinite Rebuild?
+
+Problem:
+
+The counter++ in the build() method causes the widget to keep rebuilding, which creates an infinite loop of updates.
+State Mutation in build(): The build() method should only be responsible for building the UI, not modifying the state.
+
+Corrected Code:
+
+class InfiniteState extends StatefulWidget {
+  @override
+  State<InfiniteState> createState() => _InfiniteStateState();
+}
+
+class _InfiniteStateState extends State<InfiniteState> {
+  int counter = 0;
+
+  
+  void incrementCounter() {
+    setState(() {
+      counter++;
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      body: Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Text('Counter: $counter'),
+            ElevatedButton(
+              onPressed: incrementCounter, 
+              child: Text('Increment'),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+Q4. Async Builder Loses Context After Navigation ?
+
+Problem:
+
+In the original code, you are trying to navigate to the next page when the data fetch is done. However, doing it inside FutureBuilder with Future.delayed() can cause problems.
+The issue is that after navigation happens, the context you are using might no longer be valid, leading to unexpected behavior.
+
+
+Corrected Code:
+
+FutureBuilder<String>(
+  future: fetchData(),
+  builder: (context, snapshot) {
+    if (snapshot.connectionState == ConnectionState.done) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        Navigator.of(context).push(MaterialPageRoute(builder: (_) => NextPage()));
+      });
+    }
+    return CircularProgressIndicator();
+  },
+)
+
+
+Q5. Memory Leak from Untracked Stream Subscription?
+
+Problem:
+
+You are subscribing to a stream (Firestore snapshots) in the initState() method.
+However, you are not stopping that subscription when the widget is removed or disposed.
+As a result, the stream continues running and keeps the widget in memory even after it’s no longer visible, causing a memory leak.
+
+
+Corrected Code:
+
+
+class StreamUser extends StatefulWidget {
+  @override
+  State<StreamUser> createState() => _StreamUserState();
+}
+
+class _StreamUserState extends State<StreamUser> {
+  late StreamSubscription _subscription;
+
+  @override
+  void initState() {
+    super.initState();
+    _subscription = FirebaseFirestore.instance.collection('users').snapshots().listen((snapshot) {
+      print("Received snapshot");
+    });
+  }
+
+  @override
+  void dispose() {
+    _subscription.cancel(); 
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) => Container();
+}
+
+
+Q6. Widget Not Updating Due to Missing == / hashCode Implementation?
+
+Problem:
+
+The widget (MyWidget) does not update when the model data (e.g., name) changes.
+This happens because the model class (MyModel) does not have == and hashCode methods, so Flutter cannot correctly compare the model to detect changes.
+Even though the data inside the model changes, Flutter thinks the model is the same because it compares the memory address (reference), not the data inside the model.
+
+
+Corrected Code:
+
+class MyModel {
+  final String name;
+  MyModel(this.name);
+
+
+  @override
+  bool operator ==(Object other) {
+    if (identical(this, other)) return true;
+    return other is MyModel && other.name == name;
+  }
+
+  @override
+  int get hashCode => name.hashCode;
+}
+
+class MyWidget extends StatelessWidget {
+  final MyModel model;
+  const MyWidget({required this.model});
+
+  @override
+  Widget build(BuildContext context) {
+    print('Rebuilding MyWidget for ${model.name}');
+    return Text(model.name);
+  }
+}
